@@ -1,7 +1,5 @@
-// POST /api/inventory/remove - Remove inventory item
 const database = require('../../db');
 
-// Load .env files only in development, Vercel provides env vars directly in production
 if (process.env.NODE_ENV !== 'production') {
   const environment = process.env.NODE_ENV || 'development';
   const envFile = environment === 'development' ? '.env.local' : '.env.local';
@@ -14,7 +12,6 @@ let dbInitialized = false;
 async function initDatabase() {
   if (dbInitialized) return useMongoDb;
   
-  // Check if MongoDB URI is configured
   const mongoUri = process.env.MONGODB_URI_SIMPLE || process.env.MONGODB_URI;
   if (!mongoUri) {
     console.log('⚠️ MONGODB_URI not configured - using in-memory storage');
