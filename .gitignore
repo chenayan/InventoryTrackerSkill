@@ -118,3 +118,8 @@ Thumbs.db
 # User data files
 user_data/
 *.user.json
+
+# Deployment scripts (contain sensitive info)
+deploy-vercel.sh
+deploy-*.sh
+.vercel

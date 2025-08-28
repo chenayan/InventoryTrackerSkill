@@ -18,6 +18,7 @@
     "stop-dev": "node stop-dev.js",
     "setup": "node setup.js",
     "migrate": "node migrate-to-mongodb.js",
+    "deploy:vercel": "./deploy-vercel.sh",
     "build": "echo 'No build step needed'"
   },
   "dependencies": {
