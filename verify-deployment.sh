@@ -51,7 +51,7 @@ if [ $? -eq 0 ]; then
     echo -e "${GREEN}✅ Your deployment is working correctly${NC}"
     echo ""
     echo -e "${BLUE}📱 Alexa Skill Endpoint:${NC}"
-    echo "   $DEPLOYMENT_URL/api/alexa"
+    echo "   $DEPLOYMENT_URL/api/inventory"
     echo ""
     echo -e "${BLUE}🌐 Web Interface:${NC}"
     echo "   $DEPLOYMENT_URL"

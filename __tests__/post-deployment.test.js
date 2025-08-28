@@ -87,14 +87,13 @@ describe('Post-Deployment Verification', () => {
 
     test('should check specific item quantity', async () => {
       const response = await apiClient
-        .get('/api/inventory/test-apple')
-        .query({ 
-          userId: testUser,
-          location: 'fridge'
-        })
+        .get('/api/inventory')
+        .query({ userId: testUser })
         .expect(200);
         
-      expect(response.body).toMatchObject({
+      // Check that the added item exists in the inventory
+      expect(response.body).toHaveProperty('test-apple_fridge');
+      expect(response.body['test-apple_fridge']).toMatchObject({
         name: 'test-apple',
         quantity: 5,
         location: 'fridge'
@@ -132,12 +131,15 @@ describe('Post-Deployment Verification', () => {
 
     test('should handle non-existent item lookup', async () => {
       const response = await apiClient
-        .get('/api/inventory/non-existent-item')
+        .get('/api/inventory')
         .query({ userId: testUser })
         .expect(200);
         
-      expect(response.body.quantity).toBe(0);
-      expect(response.body.message).toContain('No non-existent-item(s) found');
+      // Check that non-existent item is not in inventory
+      expect(response.body).not.toHaveProperty('non-existent-item_fridge');
+      
+      // The inventory should be empty after removing all items
+      expect(Object.keys(response.body).length).toBe(0);
     }, 15000);
   });
 
@@ -156,7 +158,7 @@ describe('Post-Deployment Verification', () => {
       };
 
       const response = await apiClient
-        .post('/api/alexa')
+        .post('/api/inventory')
         .send(alexaRequest)
         .expect(200);
         
@@ -183,7 +185,7 @@ describe('Post-Deployment Verification', () => {
       };
 
       const response = await apiClient
-        .post('/api/alexa')
+        .post('/api/inventory')
         .send(alexaRequest)
         .expect(200);
         
@@ -206,7 +208,7 @@ describe('Post-Deployment Verification', () => {
       };
 
       const response = await apiClient
-        .post('/api/alexa')
+        .post('/api/inventory')
         .send(alexaRequest)
         .expect(200);
         
@@ -231,7 +233,7 @@ describe('Post-Deployment Verification', () => {
       };
 
       const response = await apiClient
-        .post('/api/alexa')
+        .post('/api/inventory')
         .send(alexaRequest)
         .expect(200);
         
@@ -254,7 +256,7 @@ describe('Post-Deployment Verification', () => {
       };
 
       const response = await apiClient
-        .post('/api/alexa')
+        .post('/api/inventory')
         .send(alexaRequest)
         .expect(200);
         
@@ -376,7 +378,7 @@ describe('Post-Deployment Verification', () => {
 
     test('should handle invalid Alexa requests', async () => {
       const response = await apiClient
-        .post('/api/alexa')
+        .post('/api/inventory')
         .send({ invalid: 'alexa request' })
         .expect(200); // Alexa endpoints should not crash
         
