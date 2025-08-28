@@ -1,5 +1,12 @@
-// POST /api/inventory/remove - Remove inventory item (Vercel 2025 Web Standard)
+// POST /api/inventory/remove - Remove inventory item
 const database = require('../../db');
+
+// Load .env files only in development, Vercel provides env vars directly in production
+if (process.env.NODE_ENV !== 'production') {
+  const environment = process.env.NODE_ENV || 'development';
+  const envFile = environment === 'development' ? '.env.local' : '.env.local';
+  require('dotenv').config({ path: envFile });
+}
 
 let useMongoDb = false;
 let dbInitialized = false;
@@ -7,6 +14,7 @@ let dbInitialized = false;
 async function initDatabase() {
   if (dbInitialized) return useMongoDb;
   
+  // Check if MongoDB URI is configured
   const mongoUri = process.env.MONGODB_URI_SIMPLE || process.env.MONGODB_URI;
   if (!mongoUri) {
     console.log('⚠️ MONGODB_URI not configured - using in-memory storage');
@@ -54,32 +62,33 @@ async function saveUserInventory(userId, inventory) {
   }
 }
 
-// Vercel 2025 Web Standard API - POST method handler
-export async function POST(request) {
+function extractUserId(req) {
+  return req.query.userId || 'default_user';
+}
+
+module.exports = async (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
   try {
     await initDatabase();
     
-    // Parse URL for query parameters
-    const url = new URL(request.url);
-    const userId = url.searchParams.get('userId') || 'default_user';
-    
-    // Parse JSON body
-    const body = await request.json();
-    const { item, quantity, location } = body;
+    const { item, quantity, location } = req.body;
     
     if (!item || quantity === undefined) {
-      return new Response(
-        JSON.stringify({ error: 'Item name and quantity are required' }), 
-        { 
-          status: 400,
-          headers: { 
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
-          }
-        }
-      );
+      return res.status(400).json({ error: 'Item name and quantity are required' });
     }
     
+    const userId = extractUserId(req);
     const inventory = await loadUserInventory(userId);
     const itemKey = `${item.toLowerCase()}_${(location || 'fridge').toLowerCase()}`;
     
@@ -89,72 +98,20 @@ export async function POST(request) {
       if (inventory[itemKey].quantity <= 0) {
         delete inventory[itemKey];
         await saveUserInventory(userId, inventory);
-        return new Response(
-          JSON.stringify({ message: `Removed all ${item}(s) from ${location || 'fridge'}` }),
-          {
-            status: 200,
-            headers: {
-              'Content-Type': 'application/json',
-              'Access-Control-Allow-Origin': '*',
-              'Access-Control-Allow-Methods': 'POST, OPTIONS',
-              'Access-Control-Allow-Headers': 'Content-Type'
-            }
-          }
-        );
+        return res.json({ message: `Removed all ${item}(s) from ${location || 'fridge'}` });
       } else {
         inventory[itemKey].lastUpdated = new Date();
         await saveUserInventory(userId, inventory);
-        return new Response(
-          JSON.stringify({ 
-            message: `Removed ${quantity} ${item}(s) from ${location || 'fridge'}`,
-            item: inventory[itemKey]
-          }),
-          {
-            status: 200,
-            headers: {
-              'Content-Type': 'application/json',
-              'Access-Control-Allow-Origin': '*',
-              'Access-Control-Allow-Methods': 'POST, OPTIONS',
-              'Access-Control-Allow-Headers': 'Content-Type'
-            }
-          }
-        );
+        return res.json({ 
+          message: `Removed ${quantity} ${item}(s) from ${location || 'fridge'}`,
+          item: inventory[itemKey]
+        });
       }
     } else {
-      return new Response(
-        JSON.stringify({ error: `No ${item}(s) found in ${location || 'fridge'}` }),
-        { 
-          status: 404,
-          headers: { 
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
-          }
-        }
-      );
+      return res.status(404).json({ error: `No ${item}(s) found in ${location || 'fridge'}` });
     }
   } catch (error) {
     console.error('Error removing inventory item:', error);
-    return new Response(
-      JSON.stringify({ error: 'Failed to remove inventory item' }),
-      { 
-        status: 500,
-        headers: { 
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
-      }
-    );
+    return res.status(500).json({ error: 'Failed to remove inventory item' });
   }
-}
-
-// Handle CORS preflight requests
-export async function OPTIONS(request) {
-  return new Response(null, {
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type'
-    }
-  });
-}
+};
