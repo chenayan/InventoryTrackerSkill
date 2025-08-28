@@ -28,7 +28,7 @@
     "apis": {
       "custom": {
         "endpoint": {
-          "uri": "https://inventory-tracker-skill.vercel.app/api/inventory/skill"
+          "uri": "https://inventory-tracker-skill.vercel.app/api/inventory"
         }
       }
     },
