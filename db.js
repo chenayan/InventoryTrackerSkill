@@ -30,7 +30,11 @@ class Database {
       console.log('Using MongoDB URI:', mongoUri.replace(/\/\/.*@/, '//<credentials>@'));
 
       console.log('Connecting to MongoDB...');
-      this.client = new MongoClient(mongoUri);
+      this.client = new MongoClient(mongoUri, {
+        tls: true,
+        serverSelectionTimeoutMS: 3000,
+        autoSelectFamily: false,
+      });
       await this.client.connect();
       
       this.db = this.client.db(dbName);

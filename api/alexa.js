@@ -1,5 +1,5 @@
-// GET /api/inventory - Get all inventory items
-const database = require('../../db');
+// POST /api/alexa - Alexa Skills endpoint (direct at root level)
+const database = require('../db');
 
 // Load .env files only in development, Vercel provides env vars directly in production
 if (process.env.NODE_ENV !== 'production') {
@@ -50,20 +50,6 @@ async function loadUserInventory(userId) {
   }
 }
 
-function extractUserId(req) {
-  // For Alexa requests, extract from body
-  if (req.body && req.body.session && req.body.session.user && req.body.session.user.userId) {
-    return req.body.session.user.userId;
-  }
-  
-  if (req.body && req.body.context && req.body.context.System && req.body.context.System.user && req.body.context.System.user.userId) {
-    return req.body.context.System.user.userId;
-  }
-  
-  // For regular requests, extract from query
-  return req.query.userId || 'default_user';
-}
-
 async function saveUserInventory(userId, inventory) {
   if (!userId) return;
   
@@ -76,12 +62,53 @@ async function saveUserInventory(userId, inventory) {
   }
 }
 
-async function handleAlexaRequest(req, res) {
+function extractUserId(req) {
+  // For Alexa requests, extract from body
+  if (req.body && req.body.session && req.body.session.user && req.body.session.user.userId) {
+    return req.body.session.user.userId;
+  }
+  
+  if (req.body && req.body.context && req.body.context.System && req.body.context.System.user && req.body.context.System.user.userId) {
+    return req.body.context.System.user.userId;
+  }
+  
+  return 'default_user';
+}
+
+module.exports = async (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
   try {
     await initDatabase();
     
     console.log('=== ALEXA REQUEST RECEIVED ===');
     console.log('Full request body:', JSON.stringify(req.body, null, 2));
+    
+    // Handle malformed requests gracefully
+    if (!req.body || !req.body.request) {
+      console.log('Invalid Alexa request format');
+      const response = {
+        version: '1.0',
+        response: {
+          outputSpeech: {
+            type: 'PlainText',
+            text: 'リクエストの処理に問題が発生しました。'
+          },
+          shouldEndSession: true
+        }
+      };
+      return res.json(response);
+    }
     
     const { request: alexaRequest } = req.body;
     const userId = extractUserId(req);
@@ -300,34 +327,5 @@ async function handleAlexaRequest(req, res) {
     };
     
     return res.status(500).json(response);
-  }
-}
-
-module.exports = async (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  // Handle Alexa POST requests
-  if (req.method === 'POST' && req.body && req.body.request) {
-    return handleAlexaRequest(req, res);
-  }
-
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  try {
-    await initDatabase();
-    const userId = extractUserId(req);
-    const userInventory = await loadUserInventory(userId);
-    return res.json(userInventory);
-  } catch (error) {
-    console.error('Error fetching inventory:', error);
-    return res.status(500).json({ error: 'Failed to fetch inventory' });
   }
 };
