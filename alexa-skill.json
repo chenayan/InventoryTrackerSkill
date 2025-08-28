@@ -1,0 +1,137 @@
+{
+  "interactionModel": {
+    "languageModel": {
+      "invocationName": "在庫管理",
+      "intents": [
+        {
+          "name": "AddItemIntent",
+          "slots": [
+            {
+              "name": "Item",
+              "type": "FoodItems"
+            },
+            {
+              "name": "Quantity", 
+              "type": "AMAZON.NUMBER"
+            }
+          ],
+          "samples": [
+            "にんじんを四個冷蔵庫に追加した",
+            "たまごを六個冷蔵庫に入れた",
+            "牛乳を二本追加した",
+            "りんごを三個入れた",
+            "{Item} を {Quantity} 個追加した",
+            "{Item} を {Quantity} 個冷蔵庫に入れた",
+            "{Quantity} 個の {Item} を追加した"
+          ]
+        },
+        {
+          "name": "CheckItemIntent",
+          "slots": [
+            {
+              "name": "Item",
+              "type": "FoodItems"
+            }
+          ],
+          "samples": [
+            "冷蔵庫のにんじんはいくつある",
+            "たまごは何個ある", 
+            "牛乳はどのくらいある",
+            "りんごの数を教えて",
+            "冷蔵庫の {Item} はいくつある",
+            "{Item} は何個ある",
+            "{Item} の在庫を教えて"
+          ]
+        },
+        {
+          "name": "TestIntent",
+          "slots": [],
+          "samples": [
+            "テスト",
+            "在庫管理テスト", 
+            "システムテスト",
+            "動作確認"
+          ]
+        },
+        {
+          "name": "AMAZON.CancelIntent",
+          "samples": [
+            "キャンセル",
+            "やめて"
+          ]
+        },
+        {
+          "name": "AMAZON.HelpIntent",
+          "samples": [
+            "ヘルプ",
+            "助けて",
+            "使い方"
+          ]
+        },
+        {
+          "name": "AMAZON.StopIntent", 
+          "samples": [
+            "ストップ",
+            "終了",
+            "やめて"
+          ]
+        }
+      ],
+      "types": [
+        {
+          "name": "FoodItems",
+          "values": [
+            {
+              "name": {
+                "value": "にんじん",
+                "synonyms": ["人参", "ニンジン", "キャロット", "carrots"]
+              }
+            },
+            {
+              "name": {
+                "value": "たまご", 
+                "synonyms": ["卵", "タマゴ", "エッグ", "eggs"]
+              }
+            },
+            {
+              "name": {
+                "value": "牛乳",
+                "synonyms": ["ミルク", "ぎゅうにゅう", "milk"]
+              }
+            },
+            {
+              "name": {
+                "value": "りんご",
+                "synonyms": ["リンゴ", "アップル", "apples"]
+              }
+            },
+            {
+              "name": {
+                "value": "パン",
+                "synonyms": ["ぱん", "ブレッド", "bread"]
+              }
+            },
+            {
+              "name": {
+                "value": "バター", 
+                "synonyms": ["ばたー", "butter"]
+              }
+            },
+            {
+              "name": {
+                "value": "チーズ",
+                "synonyms": ["ちーず", "cheese"]
+              }
+            },
+            {
+              "name": {
+                "value": "米",
+                "synonyms": ["お米", "こめ", "ライス", "rice"]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

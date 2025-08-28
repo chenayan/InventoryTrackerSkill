@@ -1,0 +1,128 @@
+{
+  "interactionModel": {
+    "languageModel": {
+      "invocationName": "在庫管理",
+      "intents": [
+        {
+          "name": "AddCarrotsIntent",
+          "slots": [
+            {
+              "name": "Quantity",
+              "type": "AMAZON.NUMBER"
+            }
+          ],
+          "samples": [
+            "にんじんを {Quantity} 個追加した",
+            "にんじんを {Quantity} 個冷蔵庫に追加した",
+            "にんじんを {Quantity} 個冷蔵庫に入れた",
+            "人参を {Quantity} 個追加した",
+            "ニンジンを {Quantity} 個追加した"
+          ]
+        },
+        {
+          "name": "AddEggsIntent",
+          "slots": [
+            {
+              "name": "Quantity",
+              "type": "AMAZON.NUMBER"
+            }
+          ],
+          "samples": [
+            "たまごを {Quantity} 個追加した",
+            "たまごを {Quantity} 個冷蔵庫に追加した",
+            "卵を {Quantity} 個追加した",
+            "タマゴを {Quantity} 個追加した"
+          ]
+        },
+        {
+          "name": "CheckCarrotsIntent",
+          "slots": [],
+          "samples": [
+            "にんじんはいくつある",
+            "冷蔵庫のにんじんはいくつある",
+            "にんじんは何個ある",
+            "人参はいくつある",
+            "ニンジンはいくつある"
+          ]
+        },
+        {
+          "name": "CheckEggsIntent", 
+          "slots": [],
+          "samples": [
+            "たまごはいくつある",
+            "冷蔵庫のたまごはいくつある", 
+            "たまごは何個ある",
+            "卵はいくつある",
+            "タマゴはいくつある"
+          ]
+        },
+        {
+          "name": "RemoveCarrotsIntent",
+          "slots": [
+            {
+              "name": "Quantity",
+              "type": "AMAZON.NUMBER"
+            }
+          ],
+          "samples": [
+            "にんじんを {Quantity} 個使った",
+            "にんじんを {Quantity} 個使用した",
+            "冷蔵庫からにんじんを {Quantity} 個使った",
+            "人参を {Quantity} 個使った",
+            "ニンジンを {Quantity} 個使った"
+          ]
+        },
+        {
+          "name": "RemoveEggsIntent",
+          "slots": [
+            {
+              "name": "Quantity",
+              "type": "AMAZON.NUMBER"
+            }
+          ],
+          "samples": [
+            "たまごを {Quantity} 個使った",
+            "たまごを {Quantity} 個使用した",
+            "冷蔵庫からたまごを {Quantity} 個使った",
+            "卵を {Quantity} 個使った",
+            "タマゴを {Quantity} 個使った"
+          ]
+        },
+        {
+          "name": "TestIntent",
+          "slots": [],
+          "samples": [
+            "テスト",
+            "在庫管理テスト",
+            "システムテスト",
+            "動作確認"
+          ]
+        },
+        {
+          "name": "AMAZON.CancelIntent",
+          "samples": [
+            "キャンセル",
+            "やめて"
+          ]
+        },
+        {
+          "name": "AMAZON.HelpIntent",
+          "samples": [
+            "ヘルプ",
+            "助けて",
+            "使い方"
+          ]
+        },
+        {
+          "name": "AMAZON.StopIntent",
+          "samples": [
+            "ストップ",
+            "終了",
+            "やめて"
+          ]
+        }
+      ],
+      "types": []
+    }
+  }
+}

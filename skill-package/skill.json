@@ -1,0 +1,37 @@
+{
+  "manifest": {
+    "publishingInformation": {
+      "locales": {
+        "ja-JP": {
+          "summary": "家庭用在庫管理システム",
+          "examplePhrases": [
+            "在庫管理を開いて",
+            "にんじんを四個冷蔵庫に追加した",
+            "冷蔵庫のにんじんはいくつある"
+          ],
+          "keywords": [
+            "在庫",
+            "冷蔵庫",
+            "食材"
+          ],
+          "name": "在庫管理",
+          "description": "声で食材の在庫を管理できるスキル。食材を追加したり、現在の量を確認できます。"
+        }
+      },
+      "isAvailableWorldwide": false,
+      "testingInstructions": "「在庫管理を開いて」と言ってスキルを開始してください。",
+      "category": "SMART_HOME",
+      "distributionCountries": [
+        "JP"
+      ]
+    },
+    "apis": {
+      "custom": {
+        "endpoint": {
+          "uri": "https://48f93498a4b9.ngrok-free.app/api/alexa"
+        }
+      }
+    },
+    "manifestVersion": "1.0"
+  }
+}

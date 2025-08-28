@@ -1,0 +1,8 @@
+{
+  "serverPort": 3000,
+  "ngrokRegion": "us",
+  "ngrokAuthToken": null,
+  "skillName": "在庫管理",
+  "locale": "ja-JP",
+  "askProfile": "default"
+}
