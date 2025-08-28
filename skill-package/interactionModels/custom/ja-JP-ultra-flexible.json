@@ -1,0 +1,243 @@
+{
+  "interactionModel": {
+    "languageModel": {
+      "invocationName": "在庫管理",
+      "intents": [
+        {
+          "name": "AddItemIntent",
+          "slots": [
+            {
+              "name": "Item",
+              "type": "AMAZON.Food",
+              "samples": [
+                "{Item}",
+                "食材の{Item}",
+                "食べ物の{Item}"
+              ]
+            },
+            {
+              "name": "Quantity",
+              "type": "AMAZON.NUMBER"
+            },
+            {
+              "name": "Location",
+              "type": "LocationType"
+            }
+          ],
+          "samples": [
+            "{Item}を{Quantity}個追加した",
+            "{Item}を{Quantity}個{Location}に追加した", 
+            "{Item}を{Quantity}個{Location}に入れた",
+            "{Item}を{Quantity}個買った",
+            "{Location}に{Item}を{Quantity}個入れた",
+            "{Quantity}個の{Item}を追加",
+            "{Quantity}{Item}を{Location}に保存",
+            "{Item}{Quantity}個購入した"
+          ]
+        },
+        {
+          "name": "RemoveItemIntent",
+          "slots": [
+            {
+              "name": "Item",
+              "type": "AMAZON.Food", 
+              "samples": [
+                "{Item}",
+                "食材の{Item}",
+                "食べ物の{Item}"
+              ]
+            },
+            {
+              "name": "Quantity",
+              "type": "AMAZON.NUMBER"
+            },
+            {
+              "name": "Location",
+              "type": "LocationType"
+            }
+          ],
+          "samples": [
+            "{Item}を{Quantity}個使った",
+            "{Item}を{Quantity}個使用した",
+            "{Location}から{Item}を{Quantity}個使った",
+            "{Item}を{Quantity}個消費した",
+            "{Item}{Quantity}個料理に使った",
+            "{Quantity}個の{Item}を消費",
+            "{Location}の{Item}を{Quantity}個取った"
+          ]
+        },
+        {
+          "name": "CheckItemIntent",
+          "slots": [
+            {
+              "name": "Item",
+              "type": "AMAZON.Food",
+              "samples": [
+                "{Item}",
+                "食材の{Item}",
+                "食べ物の{Item}"
+              ]
+            },
+            {
+              "name": "Location",
+              "type": "LocationType"
+            }
+          ],
+          "samples": [
+            "{Item}はいくつある",
+            "{Item}は何個ある", 
+            "{Location}の{Item}はいくつある",
+            "{Item}の残量は",
+            "{Item}どのくらいある",
+            "{Item}の在庫確認",
+            "{Location}に{Item}はある"
+          ]
+        },
+        {
+          "name": "AddUnknownItemIntent",
+          "slots": [
+            {
+              "name": "UnknownItem",
+              "type": "AMAZON.SearchQuery"
+            },
+            {
+              "name": "Quantity", 
+              "type": "AMAZON.NUMBER"
+            },
+            {
+              "name": "Location",
+              "type": "LocationType"
+            }
+          ],
+          "samples": [
+            "{UnknownItem}を{Quantity}個追加した",
+            "{UnknownItem}を{Quantity}個{Location}に追加した",
+            "{UnknownItem}を{Quantity}個買った",
+            "{Quantity}個の{UnknownItem}を追加"
+          ]
+        },
+        {
+          "name": "CheckInventoryIntent",
+          "slots": [
+            {
+              "name": "Location",
+              "type": "LocationType"
+            }
+          ],
+          "samples": [
+            "在庫を教えて",
+            "何があるか教えて",
+            "{Location}に何がある",
+            "在庫確認",
+            "全部教えて",
+            "在庫リスト",
+            "{Location}の中身"
+          ]
+        },
+        {
+          "name": "TestIntent",
+          "slots": [],
+          "samples": ["テスト", "在庫管理テスト", "システムテスト", "動作確認"]
+        },
+        {
+          "name": "AMAZON.FallbackIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.CancelIntent",
+          "samples": ["キャンセル", "やめて"]
+        },
+        {
+          "name": "AMAZON.HelpIntent",
+          "samples": ["ヘルプ", "助けて", "使い方", "何ができる"]
+        },
+        {
+          "name": "AMAZON.StopIntent", 
+          "samples": ["ストップ", "終了", "やめて"]
+        }
+      ],
+      "types": [
+        {
+          "name": "LocationType",
+          "values": [
+            {
+              "name": {
+                "value": "冷蔵庫",
+                "synonyms": ["れいぞうこ", "フリッジ", "冷蔵室"]
+              }
+            },
+            {
+              "name": {
+                "value": "冷凍庫", 
+                "synonyms": ["れいとうこ", "フリーザー", "冷凍室"]
+              }
+            },
+            {
+              "name": {
+                "value": "パントリー",
+                "synonyms": ["食料庫", "食品庫", "保存庫", "ストック"]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "dialog": {
+      "intents": [
+        {
+          "name": "AddItemIntent",
+          "confirmationRequired": false,
+          "prompts": {},
+          "slots": [
+            {
+              "name": "Item",
+              "type": "AMAZON.Food",
+              "elicitationRequired": true,
+              "confirmationRequired": false,
+              "prompts": {
+                "elicitation": "Elicit.Slot.AddItemIntent.Item"
+              }
+            },
+            {
+              "name": "Quantity",
+              "type": "AMAZON.NUMBER",
+              "elicitationRequired": true,
+              "confirmationRequired": false,
+              "prompts": {
+                "elicitation": "Elicit.Slot.AddItemIntent.Quantity"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "prompts": [
+      {
+        "id": "Elicit.Slot.AddItemIntent.Item",
+        "variations": [
+          {
+            "type": "PlainText",
+            "value": "何を追加しますか？"
+          },
+          {
+            "type": "PlainText", 
+            "value": "どの食材を追加しますか？"
+          }
+        ]
+      },
+      {
+        "id": "Elicit.Slot.AddItemIntent.Quantity",
+        "variations": [
+          {
+            "type": "PlainText",
+            "value": "いくつ追加しますか？"
+          },
+          {
+            "type": "PlainText",
+            "value": "何個追加しますか？"
+          }
+        ]
+      }
+    ]
+  }
+}

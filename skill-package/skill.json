@@ -28,7 +28,7 @@
     "apis": {
       "custom": {
         "endpoint": {
-          "uri": "https://48f93498a4b9.ngrok-free.app/api/alexa"
+          "uri": "https://inventory-tracker-skill.vercel.app/api/alexa"
         }
       }
     },

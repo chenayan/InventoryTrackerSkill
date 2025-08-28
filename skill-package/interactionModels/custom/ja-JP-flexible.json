@@ -1,0 +1,193 @@
+{
+  "interactionModel": {
+    "languageModel": {
+      "invocationName": "在庫管理",
+      "intents": [
+        {
+          "name": "AddItemIntent",
+          "slots": [
+            {
+              "name": "Item",
+              "type": "FoodItemType"
+            },
+            {
+              "name": "Quantity",
+              "type": "AMAZON.NUMBER"
+            },
+            {
+              "name": "Location",
+              "type": "LocationType"
+            }
+          ],
+          "samples": [
+            "{Item}を{Quantity}個追加した",
+            "{Item}を{Quantity}個{Location}に追加した",
+            "{Item}を{Quantity}個{Location}に入れた",
+            "{Item}を{Quantity}個買った",
+            "{Item}を{Quantity}個{Location}にしまった"
+          ]
+        },
+        {
+          "name": "RemoveItemIntent",
+          "slots": [
+            {
+              "name": "Item", 
+              "type": "FoodItemType"
+            },
+            {
+              "name": "Quantity",
+              "type": "AMAZON.NUMBER"
+            },
+            {
+              "name": "Location",
+              "type": "LocationType"
+            }
+          ],
+          "samples": [
+            "{Item}を{Quantity}個使った",
+            "{Item}を{Quantity}個使用した",
+            "{Location}から{Item}を{Quantity}個使った",
+            "{Item}を{Quantity}個消費した",
+            "{Item}を{Quantity}個料理に使った"
+          ]
+        },
+        {
+          "name": "CheckItemIntent",
+          "slots": [
+            {
+              "name": "Item",
+              "type": "FoodItemType"
+            },
+            {
+              "name": "Location", 
+              "type": "LocationType"
+            }
+          ],
+          "samples": [
+            "{Item}はいくつある",
+            "{Item}は何個ある",
+            "{Location}の{Item}はいくつある",
+            "{Item}の残量は",
+            "{Item}どのくらいある"
+          ]
+        },
+        {
+          "name": "CheckInventoryIntent",
+          "slots": [
+            {
+              "name": "Location",
+              "type": "LocationType"
+            }
+          ],
+          "samples": [
+            "在庫を教えて",
+            "何があるか教えて",
+            "{Location}に何がある",
+            "在庫確認",
+            "全部教えて"
+          ]
+        },
+        {
+          "name": "TestIntent",
+          "slots": [],
+          "samples": [
+            "テスト",
+            "在庫管理テスト",
+            "システムテスト",
+            "動作確認"
+          ]
+        },
+        {
+          "name": "AMAZON.CancelIntent",
+          "samples": ["キャンセル", "やめて"]
+        },
+        {
+          "name": "AMAZON.HelpIntent", 
+          "samples": ["ヘルプ", "助けて", "使い方"]
+        },
+        {
+          "name": "AMAZON.StopIntent",
+          "samples": ["ストップ", "終了", "やめて"]
+        }
+      ],
+      "types": [
+        {
+          "name": "FoodItemType",
+          "values": [
+            {
+              "name": {
+                "value": "にんじん",
+                "synonyms": ["人参", "ニンジン", "キャロット"]
+              }
+            },
+            {
+              "name": {
+                "value": "たまご", 
+                "synonyms": ["卵", "タマゴ", "エッグ"]
+              }
+            },
+            {
+              "name": {
+                "value": "牛乳",
+                "synonyms": ["ミルク", "ぎゅうにゅう"]
+              }
+            },
+            {
+              "name": {
+                "value": "りんご",
+                "synonyms": ["リンゴ", "アップル"]
+              }
+            },
+            {
+              "name": {
+                "value": "パン",
+                "synonyms": ["ぱん", "ブレッド", "食パン"]
+              }
+            },
+            {
+              "name": {
+                "value": "バター",
+                "synonyms": ["ばたー"]
+              }
+            },
+            {
+              "name": {
+                "value": "チーズ",
+                "synonyms": ["ちーず"]
+              }
+            },
+            {
+              "name": {
+                "value": "米",
+                "synonyms": ["お米", "こめ", "ライス", "ご飯"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "LocationType",
+          "values": [
+            {
+              "name": {
+                "value": "冷蔵庫",
+                "synonyms": ["れいぞうこ", "フリッジ"]
+              }
+            },
+            {
+              "name": {
+                "value": "冷凍庫",
+                "synonyms": ["れいとうこ", "フリーザー"]
+              }
+            },
+            {
+              "name": {
+                "value": "パントリー",
+                "synonyms": ["食料庫", "食品庫", "保存庫"]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
