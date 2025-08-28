@@ -1,9 +1,12 @@
 // GET /api/inventory - Get all inventory items
 const database = require('../../db');
 
-const environment = process.env.NODE_ENV || 'production';
-const envFile = environment === 'production' ? '.env.production' : '.env.local';
-require('dotenv').config({ path: envFile });
+// Load .env files only in development, Vercel provides env vars directly in production
+if (process.env.NODE_ENV !== 'production') {
+  const environment = process.env.NODE_ENV || 'development';
+  const envFile = environment === 'development' ? '.env.local' : '.env.local';
+  require('dotenv').config({ path: envFile });
+}
 
 let useMongoDb = false;
 let dbInitialized = false;
