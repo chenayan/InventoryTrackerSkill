@@ -61,6 +61,8 @@ typings/
 .env.test
 .env.local
 .env.production
+.env.*
+!.env.example
 
 # parcel-bundler cache
 .cache
@@ -112,3 +114,7 @@ public
 # OS files
 .DS_Store
 Thumbs.db
+
+# User data files
+user_data/
+*.user.json

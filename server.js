@@ -2,92 +2,211 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const path = require('path');
+const fs = require('fs');
+const database = require('./db');
+
+// Load environment-specific configuration
+const environment = process.env.NODE_ENV || 'development';
+const envFile = environment === 'production' ? '.env.production' : '.env.local';
+
+console.log(`🔧 Loading environment: ${environment} (${envFile})`);
+require('dotenv').config({ path: envFile });
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Initialize database connection
+let useMongoDb = false;
+database.connect()
+  .then(() => {
+    useMongoDb = true;
+    console.log('✅ MongoDB connected - using database storage');
+  })
+  .catch((error) => {
+    console.log('⚠️  MongoDB connection failed - falling back to file storage');
+    console.log('Error:', error.message);
+    useMongoDb = false;
+  });
 
 app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
-// In-memory storage (replace with database in production)
-let inventory = {};
+// Data storage utilities
+const DATA_DIR = path.join(__dirname, 'user_data');
+
+function ensureDataDir() {
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  }
+}
+
+function getUserInventoryPath(userId) {
+  const safeUserId = userId.replace(/[^a-zA-Z0-9-_]/g, '_');
+  return path.join(DATA_DIR, `${safeUserId}.json`);
+}
+
+async function loadUserInventory(userId) {
+  if (!userId) return {};
+  
+  try {
+    if (useMongoDb) {
+      return await database.getUserInventory(userId);
+    } else {
+      // Fallback to file storage
+      ensureDataDir();
+      const filePath = getUserInventoryPath(userId);
+      
+      if (fs.existsSync(filePath)) {
+        const data = fs.readFileSync(filePath, 'utf8');
+        return JSON.parse(data);
+      }
+      return {};
+    }
+  } catch (error) {
+    console.error('Error loading user inventory:', error);
+    return {};
+  }
+}
+
+async function saveUserInventory(userId, inventory) {
+  if (!userId) return;
+  
+  try {
+    if (useMongoDb) {
+      await database.saveUserInventory(userId, inventory);
+    } else {
+      // Fallback to file storage
+      ensureDataDir();
+      const filePath = getUserInventoryPath(userId);
+      fs.writeFileSync(filePath, JSON.stringify(inventory, null, 2));
+    }
+  } catch (error) {
+    console.error('Error saving user inventory:', error);
+  }
+}
+
+function extractUserId(req) {
+  // Extract user ID from Alexa request
+  if (req.body && req.body.session && req.body.session.user && req.body.session.user.userId) {
+    return req.body.session.user.userId;
+  }
+  
+  if (req.body && req.body.context && req.body.context.System && req.body.context.System.user && req.body.context.System.user.userId) {
+    return req.body.context.System.user.userId;
+  }
+  
+  // Fallback for REST API calls - use query parameter or default
+  return req.query.userId || 'default_user';
+}
 
 // Get all inventory items
-app.get('/api/inventory', (req, res) => {
-  res.json(inventory);
+app.get('/api/inventory', async (req, res) => {
+  try {
+    const userId = extractUserId(req);
+    const userInventory = await loadUserInventory(userId);
+    res.json(userInventory);
+  } catch (error) {
+    console.error('Error fetching inventory:', error);
+    res.status(500).json({ error: 'Failed to fetch inventory' });
+  }
 });
 
 // Add or update inventory item
-app.post('/api/inventory/add', (req, res) => {
-  const { item, quantity, location } = req.body;
-  
-  if (!item || quantity === undefined) {
-    return res.status(400).json({ error: 'Item name and quantity are required' });
+app.post('/api/inventory/add', async (req, res) => {
+  try {
+    const { item, quantity, location } = req.body;
+    
+    if (!item || quantity === undefined) {
+      return res.status(400).json({ error: 'Item name and quantity are required' });
+    }
+    
+    const userId = extractUserId(req);
+    const inventory = await loadUserInventory(userId);
+    const itemKey = `${item.toLowerCase()}_${(location || 'fridge').toLowerCase()}`;
+    
+    if (inventory[itemKey]) {
+      inventory[itemKey].quantity += parseInt(quantity);
+    } else {
+      inventory[itemKey] = {
+        name: item,
+        quantity: parseInt(quantity),
+        location: location || 'fridge',
+        lastUpdated: new Date()
+      };
+    }
+    
+    await saveUserInventory(userId, inventory);
+    
+    res.json({ 
+      message: `Added ${quantity} ${item}(s) to ${location || 'fridge'}`,
+      item: inventory[itemKey]
+    });
+  } catch (error) {
+    console.error('Error adding inventory item:', error);
+    res.status(500).json({ error: 'Failed to add inventory item' });
   }
-  
-  const itemKey = `${item.toLowerCase()}_${(location || 'fridge').toLowerCase()}`;
-  
-  if (inventory[itemKey]) {
-    inventory[itemKey].quantity += parseInt(quantity);
-  } else {
-    inventory[itemKey] = {
-      name: item,
-      quantity: parseInt(quantity),
-      location: location || 'fridge',
-      lastUpdated: new Date()
-    };
-  }
-  
-  res.json({ 
-    message: `Added ${quantity} ${item}(s) to ${location || 'fridge'}`,
-    item: inventory[itemKey]
-  });
 });
 
 // Remove inventory item
-app.post('/api/inventory/remove', (req, res) => {
-  const { item, quantity, location } = req.body;
-  
-  if (!item || quantity === undefined) {
-    return res.status(400).json({ error: 'Item name and quantity are required' });
-  }
-  
-  const itemKey = `${item.toLowerCase()}_${(location || 'fridge').toLowerCase()}`;
-  
-  if (inventory[itemKey]) {
-    inventory[itemKey].quantity -= parseInt(quantity);
+app.post('/api/inventory/remove', async (req, res) => {
+  try {
+    const { item, quantity, location } = req.body;
     
-    if (inventory[itemKey].quantity <= 0) {
-      delete inventory[itemKey];
-      res.json({ message: `Removed all ${item}(s) from ${location || 'fridge'}` });
-    } else {
-      inventory[itemKey].lastUpdated = new Date();
-      res.json({ 
-        message: `Removed ${quantity} ${item}(s) from ${location || 'fridge'}`,
-        item: inventory[itemKey]
-      });
+    if (!item || quantity === undefined) {
+      return res.status(400).json({ error: 'Item name and quantity are required' });
     }
-  } else {
-    res.status(404).json({ error: `No ${item}(s) found in ${location || 'fridge'}` });
+    
+    const userId = extractUserId(req);
+    const inventory = await loadUserInventory(userId);
+    const itemKey = `${item.toLowerCase()}_${(location || 'fridge').toLowerCase()}`;
+    
+    if (inventory[itemKey]) {
+      inventory[itemKey].quantity -= parseInt(quantity);
+      
+      if (inventory[itemKey].quantity <= 0) {
+        delete inventory[itemKey];
+        await saveUserInventory(userId, inventory);
+        res.json({ message: `Removed all ${item}(s) from ${location || 'fridge'}` });
+      } else {
+        inventory[itemKey].lastUpdated = new Date();
+        await saveUserInventory(userId, inventory);
+        res.json({ 
+          message: `Removed ${quantity} ${item}(s) from ${location || 'fridge'}`,
+          item: inventory[itemKey]
+        });
+      }
+    } else {
+      res.status(404).json({ error: `No ${item}(s) found in ${location || 'fridge'}` });
+    }
+  } catch (error) {
+    console.error('Error removing inventory item:', error);
+    res.status(500).json({ error: 'Failed to remove inventory item' });
   }
 });
 
 // Check quantity of specific item
-app.get('/api/inventory/:item', (req, res) => {
-  const item = req.params.item.toLowerCase();
-  const location = req.query.location || 'fridge';
-  const itemKey = `${item}_${location.toLowerCase()}`;
-  
-  if (inventory[itemKey]) {
-    res.json(inventory[itemKey]);
-  } else {
-    res.json({ 
-      name: req.params.item,
-      quantity: 0,
-      location: location,
-      message: `No ${req.params.item}(s) found in ${location}`
-    });
+app.get('/api/inventory/:item', async (req, res) => {
+  try {
+    const item = req.params.item.toLowerCase();
+    const location = req.query.location || 'fridge';
+    const userId = extractUserId(req);
+    const inventory = await loadUserInventory(userId);
+    const itemKey = `${item}_${location.toLowerCase()}`;
+    
+    if (inventory[itemKey]) {
+      res.json(inventory[itemKey]);
+    } else {
+      res.json({ 
+        name: req.params.item,
+        quantity: 0,
+        location: location,
+        message: `No ${req.params.item}(s) found in ${location}`
+      });
+    }
+  } catch (error) {
+    console.error('Error fetching inventory item:', error);
+    res.status(500).json({ error: 'Failed to fetch inventory item' });
   }
 });
 
@@ -132,12 +251,14 @@ const englishToJapanese = {
 };
 
 // Alexa skill endpoint
-app.post('/api/alexa', (req, res) => {
+app.post('/api/alexa', async (req, res) => {
   // Log the entire incoming request for debugging
   console.log('=== ALEXA REQUEST RECEIVED ===');
   console.log('Full request body:', JSON.stringify(req.body, null, 2));
   
   const { request } = req.body;
+  const userId = extractUserId(req);
+  console.log('User ID:', userId);
   
   console.log('Request type:', request.type);
   if (request.intent) {
@@ -173,6 +294,7 @@ app.post('/api/alexa', (req, res) => {
       
       console.log('Adding carrots - Quantity:', quantity);
       
+      const inventory = await loadUserInventory(userId);
       const itemKey = `${englishItem.toLowerCase()}_冷蔵庫`;
       
       if (inventory[itemKey]) {
@@ -188,6 +310,8 @@ app.post('/api/alexa', (req, res) => {
         };
         console.log('Created new carrots:', inventory[itemKey]);
       }
+      
+      await saveUserInventory(userId, inventory);
       
       const response = {
         version: '1.0',
@@ -211,6 +335,7 @@ app.post('/api/alexa', (req, res) => {
       
       console.log('Adding eggs - Quantity:', quantity);
       
+      const inventory = await loadUserInventory(userId);
       const itemKey = `${englishItem.toLowerCase()}_冷蔵庫`;
       
       if (inventory[itemKey]) {
@@ -226,6 +351,8 @@ app.post('/api/alexa', (req, res) => {
         };
         console.log('Created new eggs:', inventory[itemKey]);
       }
+      
+      await saveUserInventory(userId, inventory);
       
       const response = {
         version: '1.0',
@@ -243,6 +370,7 @@ app.post('/api/alexa', (req, res) => {
       console.log('Processing CheckCarrotsIntent');
       const japaneseItem = 'にんじん';
       const englishItem = 'carrots';
+      const inventory = await loadUserInventory(userId);
       const itemKey = `${englishItem.toLowerCase()}_冷蔵庫`;
       
       console.log('Checking - Key:', itemKey);
@@ -266,6 +394,7 @@ app.post('/api/alexa', (req, res) => {
       console.log('Processing CheckEggsIntent');
       const japaneseItem = 'たまご';
       const englishItem = 'eggs';
+      const inventory = await loadUserInventory(userId);
       const itemKey = `${englishItem.toLowerCase()}_冷蔵庫`;
       
       console.log('Checking - Key:', itemKey);
@@ -292,6 +421,7 @@ app.post('/api/alexa', (req, res) => {
       const quantity = isNaN(parsedValue) ? 1 : parsedValue;
       const japaneseItem = 'にんじん';
       const englishItem = 'carrots';
+      const inventory = await loadUserInventory(userId);
       const itemKey = `${englishItem.toLowerCase()}_冷蔵庫`;
       
       console.log('Removing carrots - Quantity:', quantity);
@@ -301,6 +431,7 @@ app.post('/api/alexa', (req, res) => {
         
         if (inventory[itemKey].quantity <= 0) {
           delete inventory[itemKey];
+          await saveUserInventory(userId, inventory);
           const response = {
             version: '1.0',
             response: {
@@ -315,6 +446,7 @@ app.post('/api/alexa', (req, res) => {
           res.json(response);
         } else {
           inventory[itemKey].lastUpdated = new Date();
+          await saveUserInventory(userId, inventory);
           const response = {
             version: '1.0',
             response: {
@@ -349,6 +481,7 @@ app.post('/api/alexa', (req, res) => {
       const quantity = isNaN(parsedValue) ? 1 : parsedValue;
       const japaneseItem = 'たまご';
       const englishItem = 'eggs';
+      const inventory = await loadUserInventory(userId);
       const itemKey = `${englishItem.toLowerCase()}_冷蔵庫`;
       
       console.log('Removing eggs - Quantity:', quantity);
@@ -358,6 +491,7 @@ app.post('/api/alexa', (req, res) => {
         
         if (inventory[itemKey].quantity <= 0) {
           delete inventory[itemKey];
+          await saveUserInventory(userId, inventory);
           const response = {
             version: '1.0',
             response: {
@@ -372,6 +506,7 @@ app.post('/api/alexa', (req, res) => {
           res.json(response);
         } else {
           inventory[itemKey].lastUpdated = new Date();
+          await saveUserInventory(userId, inventory);
           const response = {
             version: '1.0',
             response: {
@@ -403,6 +538,7 @@ app.post('/api/alexa', (req, res) => {
       const japaneseItem = request.intent.slots.Item.value;
       const quantity = parseInt(request.intent.slots.Quantity.value);
       const englishItem = japaneseToEnglish[japaneseItem] || japaneseItem;
+      const inventory = await loadUserInventory(userId);
       const itemKey = `${englishItem.toLowerCase()}_冷蔵庫`;
       
       if (inventory[itemKey]) {
@@ -410,6 +546,7 @@ app.post('/api/alexa', (req, res) => {
         
         if (inventory[itemKey].quantity <= 0) {
           delete inventory[itemKey];
+          await saveUserInventory(userId, inventory);
           res.json({
             version: '1.0',
             response: {
@@ -422,6 +559,7 @@ app.post('/api/alexa', (req, res) => {
           });
         } else {
           inventory[itemKey].lastUpdated = new Date();
+          await saveUserInventory(userId, inventory);
           res.json({
             version: '1.0',
             response: {
