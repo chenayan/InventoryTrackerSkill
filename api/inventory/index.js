@@ -312,8 +312,23 @@ module.exports = async (req, res) => {
     return res.status(200).end();
   }
 
-  // Handle Alexa POST requests
-  if (req.method === 'POST' && req.body && req.body.request) {
+  // Handle Alexa POST requests (both valid and invalid)
+  if (req.method === 'POST') {
+    // Handle malformed Alexa requests gracefully
+    if (!req.body || !req.body.request) {
+      // Return a valid Alexa response for invalid requests
+      const response = {
+        version: '1.0',
+        response: {
+          outputSpeech: {
+            type: 'PlainText',
+            text: 'リクエストの処理に問題が発生しました。'
+          },
+          shouldEndSession: true
+        }
+      };
+      return res.json(response);
+    }
     return handleAlexaRequest(req, res);
   }
 

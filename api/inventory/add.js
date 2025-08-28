@@ -1,12 +1,5 @@
-// POST /api/inventory/add - Add inventory item
+// POST /api/inventory/add - Add inventory item (Vercel 2025 Web Standard)
 const database = require('../../db');
-
-// Load .env files only in development, Vercel provides env vars directly in production
-if (process.env.NODE_ENV !== 'production') {
-  const environment = process.env.NODE_ENV || 'development';
-  const envFile = environment === 'development' ? '.env.local' : '.env.local';
-  require('dotenv').config({ path: envFile });
-}
 
 let useMongoDb = false;
 let dbInitialized = false;
@@ -14,12 +7,20 @@ let dbInitialized = false;
 async function initDatabase() {
   if (dbInitialized) return useMongoDb;
   
+  const mongoUri = process.env.MONGODB_URI_SIMPLE || process.env.MONGODB_URI;
+  if (!mongoUri) {
+    console.log('⚠️ MONGODB_URI not configured - using in-memory storage');
+    useMongoDb = false;
+    dbInitialized = true;
+    return useMongoDb;
+  }
+  
   try {
     await database.connect();
     useMongoDb = true;
-    console.log('✅ MongoDB connected');
+    console.log('✅ MongoDB connected successfully');
   } catch (error) {
-    console.log('⚠️ MongoDB connection failed');
+    console.log('⚠️ MongoDB connection failed:', error.message);
     useMongoDb = false;
   }
   
@@ -53,38 +54,38 @@ async function saveUserInventory(userId, inventory) {
   }
 }
 
-function extractUserId(req) {
-  return req.query.userId || 'default_user';
-}
-
-module.exports = async (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
+// Vercel 2025 Web Standard API - POST method handler
+export async function POST(request) {
   try {
     await initDatabase();
     
-    const { item, quantity, location } = req.body;
+    // Parse URL for query parameters
+    const url = new URL(request.url);
+    const userId = url.searchParams.get('userId') || 'default_user';
+    
+    // Parse JSON body
+    const body = await request.json();
+    const { item, quantity, location } = body;
     
     if (!item || quantity === undefined) {
-      return res.status(400).json({ error: 'Item name and quantity are required' });
+      return new Response(
+        JSON.stringify({ error: 'Item name and quantity are required' }), 
+        { 
+          status: 400,
+          headers: { 
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+          }
+        }
+      );
     }
     
-    const userId = extractUserId(req);
     const inventory = await loadUserInventory(userId);
     const itemKey = `${item.toLowerCase()}_${(location || 'fridge').toLowerCase()}`;
     
     if (inventory[itemKey]) {
       inventory[itemKey].quantity += parseInt(quantity);
+      inventory[itemKey].lastUpdated = new Date();
     } else {
       inventory[itemKey] = {
         name: item,
@@ -96,12 +97,46 @@ module.exports = async (req, res) => {
     
     await saveUserInventory(userId, inventory);
     
-    return res.json({ 
+    const response = { 
       message: `Added ${quantity} ${item}(s) to ${location || 'fridge'}`,
       item: inventory[itemKey]
-    });
+    };
+    
+    return new Response(
+      JSON.stringify(response),
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type'
+        }
+      }
+    );
   } catch (error) {
     console.error('Error adding inventory item:', error);
-    return res.status(500).json({ error: 'Failed to add inventory item' });
+    return new Response(
+      JSON.stringify({ error: 'Failed to add inventory item' }),
+      { 
+        status: 500,
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
+      }
+    );
   }
-};
+}
+
+// Handle CORS preflight requests
+export async function OPTIONS(request) {
+  return new Response(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type'
+    }
+  });
+}
