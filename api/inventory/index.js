@@ -265,8 +265,6 @@ module.exports = async (req, res) => {
     await initDatabase();
     const userId = extractUserId(req);
     const userInventory = await loadUserInventory(userId);
-    // Add deployment timestamp for debugging
-    userInventory._deploymentTest = new Date().toISOString();
     return res.json(userInventory);
   } catch (error) {
     console.error('Error fetching inventory:', error);
