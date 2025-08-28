@@ -1,5 +1,5 @@
 // Vercel serverless function for Alexa endpoint
-const database = require('../db');
+const database = require('../../db');
 
 // Load environment-specific configuration
 const environment = process.env.NODE_ENV || 'production';
