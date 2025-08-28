@@ -1,26 +1,13 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "public/**",
-      "use": "@vercel/static"
+  "functions": {
+    "api/add.js": {
+      "runtime": "@vercel/node@3"
     },
-    {
-      "src": "api/**/*.js",
-      "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
+    "api/remove.js": {
+      "runtime": "@vercel/node@3"
     },
-    {
-      "src": "/(.*)",
-      "dest": "/public/$1"
+    "api/inventory/index.js": {
+      "runtime": "@vercel/node@3"
     }
-  ],
-  "env": {
-    "NODE_ENV": "production"
   }
 }
