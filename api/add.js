@@ -1,4 +1,4 @@
-const database = require('../../db');
+const database = require('../db');
 
 if (process.env.NODE_ENV !== 'production') {
   const environment = process.env.NODE_ENV || 'development';

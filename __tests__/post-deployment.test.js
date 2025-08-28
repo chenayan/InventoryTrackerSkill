@@ -54,7 +54,7 @@ describe('Post-Deployment Verification', () => {
 
     test('should add inventory item', async () => {
       const response = await apiClient
-        .post('/api/inventory/add')
+        .post('/api/add')
         .query({ userId: testUser })
         .send({
           item: 'test-apple',
@@ -102,7 +102,7 @@ describe('Post-Deployment Verification', () => {
 
     test('should remove inventory item', async () => {
       const response = await apiClient
-        .post('/api/inventory/remove')
+        .post('/api/remove')
         .query({ userId: testUser })
         .send({
           item: 'test-apple',
@@ -117,7 +117,7 @@ describe('Post-Deployment Verification', () => {
 
     test('should remove all remaining items', async () => {
       const response = await apiClient
-        .post('/api/inventory/remove')
+        .post('/api/remove')
         .query({ userId: testUser })
         .send({
           item: 'test-apple',
@@ -271,14 +271,14 @@ describe('Post-Deployment Verification', () => {
     test('should maintain separate inventories for different users', async () => {
       // User 1 adds bananas
       await apiClient
-        .post('/api/inventory/add')
+        .post('/api/add')
         .query({ userId: user1 })
         .send({ item: 'banana', quantity: 5, location: 'counter' })
         .expect(200);
 
       // User 2 adds oranges  
       await apiClient
-        .post('/api/inventory/add')
+        .post('/api/add')
         .query({ userId: user2 })
         .send({ item: 'orange', quantity: 3, location: 'counter' })
         .expect(200);
@@ -309,13 +309,13 @@ describe('Post-Deployment Verification', () => {
     test('should persist data across requests', async () => {
       // Add items
       await apiClient
-        .post('/api/inventory/add')
+        .post('/api/add')
         .query({ userId: persistenceUser })
         .send({ item: 'bread', quantity: 2, location: 'pantry' })
         .expect(200);
 
       await apiClient
-        .post('/api/inventory/add')
+        .post('/api/add')
         .query({ userId: persistenceUser })
         .send({ item: 'milk', quantity: 1, location: 'fridge' })
         .expect(200);
@@ -345,7 +345,7 @@ describe('Post-Deployment Verification', () => {
       for (let i = 0; i < 5; i++) {
         promises.push(
           apiClient
-            .post('/api/inventory/add')
+            .post('/api/add')
             .query({ userId: concurrentUser })
             .send({ item: 'potato', quantity: 1, location: 'pantry' })
         );
@@ -369,7 +369,7 @@ describe('Post-Deployment Verification', () => {
   describe('🚨 Error Handling', () => {
     test('should handle malformed requests gracefully', async () => {
       const response = await apiClient
-        .post('/api/inventory/add')
+        .post('/api/add')
         .send({ invalid: 'data' })
         .expect(400);
         
