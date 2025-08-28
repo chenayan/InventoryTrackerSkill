@@ -15,12 +15,20 @@ let dbInitialized = false;
 async function initDatabase() {
   if (dbInitialized) return useMongoDb;
   
+  // Check if MongoDB URI is configured
+  if (!process.env.MONGODB_URI) {
+    console.log('⚠️ MONGODB_URI not configured - using in-memory storage');
+    useMongoDb = false;
+    dbInitialized = true;
+    return useMongoDb;
+  }
+  
   try {
     await database.connect();
     useMongoDb = true;
     console.log('✅ MongoDB connected - using database storage');
   } catch (error) {
-    console.log('⚠️ MongoDB connection failed - falling back to file storage');
+    console.log('⚠️ MongoDB connection failed - using in-memory storage');
     console.log('Error:', error.message);
     useMongoDb = false;
   }
@@ -29,6 +37,9 @@ async function initDatabase() {
   return useMongoDb;
 }
 
+// In-memory storage fallback (will reset between function invocations)
+const memoryStorage = {};
+
 async function loadUserInventory(userId) {
   if (!userId) return {};
   
@@ -36,13 +47,12 @@ async function loadUserInventory(userId) {
     if (useMongoDb) {
       return await database.getUserInventory(userId);
     } else {
-      // File storage not available in Vercel serverless - return empty
-      console.warn('File storage not available in serverless environment');
-      return {};
+      // Use in-memory storage as fallback
+      return memoryStorage[userId] || {};
     }
   } catch (error) {
     console.error('Error loading user inventory:', error);
-    return {};
+    return memoryStorage[userId] || {};
   }
 }
 
@@ -53,10 +63,14 @@ async function saveUserInventory(userId, inventory) {
     if (useMongoDb) {
       await database.saveUserInventory(userId, inventory);
     } else {
-      console.warn('File storage not available in serverless environment');
+      // Use in-memory storage as fallback
+      memoryStorage[userId] = inventory;
+      console.log(`Saved to memory storage for user: ${userId}`);
     }
   } catch (error) {
     console.error('Error saving user inventory:', error);
+    // Fallback to memory storage
+    memoryStorage[userId] = inventory;
   }
 }
 
