@@ -1,9 +1,11 @@
 const { MongoClient } = require('mongodb');
 
-// Load environment-specific configuration
-const environment = process.env.NODE_ENV || 'development';
-const envFile = environment === 'production' ? '.env.production' : '.env.local';
-require('dotenv').config({ path: envFile });
+// Load .env files only in development, Vercel provides env vars directly in production
+if (process.env.NODE_ENV !== 'production') {
+  const environment = process.env.NODE_ENV || 'development';
+  const envFile = environment === 'development' ? '.env.local' : '.env.local';
+  require('dotenv').config({ path: envFile });
+}
 
 class Database {
   constructor() {
@@ -18,12 +20,14 @@ class Database {
     }
 
     try {
-      const mongoUri = process.env.MONGODB_URI;
+      const mongoUri = process.env.MONGODB_URI_SIMPLE || process.env.MONGODB_URI;
       const dbName = process.env.MONGODB_DB_NAME || 'inventory-tracker';
 
       if (!mongoUri) {
         throw new Error('MONGODB_URI environment variable is not set');
       }
+      
+      console.log('Using MongoDB URI:', mongoUri.replace(/\/\/.*@/, '//<credentials>@'));
 
       console.log('Connecting to MongoDB...');
       this.client = new MongoClient(mongoUri);

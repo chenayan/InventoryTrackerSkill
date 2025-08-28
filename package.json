@@ -19,6 +19,8 @@
     "setup": "node setup.js",
     "migrate": "node migrate-to-mongodb.js",
     "deploy:vercel": "./deploy-vercel.sh",
+    "test:deployment": "jest --testNamePattern='Post-Deployment Verification'",
+    "verify:deployment": "./verify-deployment.sh",
     "build": "echo 'No build step needed'"
   },
   "dependencies": {

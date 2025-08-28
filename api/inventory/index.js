@@ -14,12 +14,21 @@ let dbInitialized = false;
 async function initDatabase() {
   if (dbInitialized) return useMongoDb;
   
+  // Check if MongoDB URI is configured
+  const mongoUri = process.env.MONGODB_URI_SIMPLE || process.env.MONGODB_URI;
+  if (!mongoUri) {
+    console.log('⚠️ MONGODB_URI not configured - using in-memory storage');
+    useMongoDb = false;
+    dbInitialized = true;
+    return useMongoDb;
+  }
+  
   try {
     await database.connect();
     useMongoDb = true;
-    console.log('✅ MongoDB connected');
+    console.log('✅ MongoDB connected successfully');
   } catch (error) {
-    console.log('⚠️ MongoDB connection failed');
+    console.log('⚠️ MongoDB connection failed:', error.message);
     useMongoDb = false;
   }
   
