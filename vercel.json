@@ -1,13 +1,1 @@
-{
-  "functions": {
-    "api/add.js": {
-      "runtime": "@vercel/node@3"
-    },
-    "api/remove.js": {
-      "runtime": "@vercel/node@3"
-    },
-    "api/inventory/index.js": {
-      "runtime": "@vercel/node@3"
-    }
-  }
-}
+{}
